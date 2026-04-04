@@ -24,9 +24,12 @@
         <div class="card stat-card" style="background: linear-gradient(135deg, #4F46E5 0%, #312E81 100%); border: none;">
             <h3>Target IP (Whitelist)</h3>
             <div class="value" style="font-size: 1.5rem; margin-top: 0.5rem; font-family: monospace;">{{ $serverIp }}</div>
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-top: 0.5rem;">
+            <p style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-top: 0.5rem; margin-bottom: 1rem;">
                 Add this IP to Al-Waseet account
             </p>
+            <button id="testApiBtn" class="btn" style="width: 100%; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+                <i class="fas fa-satellite-dish"></i> Test Waseet API Connection
+            </button>
         </div>
     </div>
 
@@ -79,4 +82,42 @@
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+    document.getElementById('testApiBtn').addEventListener('click', function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Pinging...';
+        btn.disabled = true;
+
+        fetch('{{ route('dashboard.test') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ ' + data.message);
+                btn.style.background = 'rgba(16, 185, 129, 0.2)';
+                btn.style.borderColor = '#10b981';
+            } else {
+                alert('❌ ' + data.message);
+                btn.style.background = 'rgba(239, 68, 68, 0.2)';
+                btn.style.borderColor = '#ef4444';
+            }
+        })
+        .catch(error => {
+            alert('❌ Network Error: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    });
+</script>
 @endsection

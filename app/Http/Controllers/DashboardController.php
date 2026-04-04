@@ -41,4 +41,33 @@ class DashboardController extends Controller
             'recentLogs' => $recentLogs,
         ]);
     }
+
+    /**
+     * Test connection to Al-Waseet API
+     */
+    public function testConnection()
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::get('https://api.alwaseet-iq.net/v1/merchant/citys');
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                $count = count($data['data'] ?? []);
+                return response()->json([
+                    'success' => true,
+                    'message' => "Connection successful! Verified by fetching {$count} cities."
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => "Connected, but Al-Waseet returned status: " . $response->status()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => "Connection failed: " . $e->getMessage()
+            ]);
+        }
+    }
 }

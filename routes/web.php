@@ -11,6 +11,8 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::post('/dashboard/test-connection', [DashboardController::class, 'testConnection'])->name('dashboard.test');
+
 
 Route::resource('projects', ProjectController::class);
 Route::post('projects/{project}/toggle', [ProjectController::class, 'toggle'])->name('projects.toggle');
