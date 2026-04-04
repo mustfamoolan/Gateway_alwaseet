@@ -111,7 +111,9 @@ class WaseetService
         }
 
         // Official AlWaseet Documentation V2.3: token MUST be a Query Parameter
+        // NOTE: We also add it to $params just in case the server expects it in the body too
         $url = "{$this->baseUrl}{$endpoint}?token={$token}";
+        $params['token'] = $token; 
         
         // Minimize headers to avoid 400 errors from strict AlWaseet servers
         $request = Http::asMultipart()->withHeaders([
@@ -120,8 +122,15 @@ class WaseetService
         
         try {
             if ($method === 'POST') {
+                // Ensure strict integer types for Waseet compatibility
+                foreach (['city_id', 'region_id', 'items_number', 'price', 'package_size'] as $key) {
+                    if (isset($params[$key])) {
+                        $params[$key] = (int) $params[$key];
+                    }
+                }
+
                 // Log payload for debugging (sanitized)
-                Log::debug("Waseet Request Payload [{$endpoint}]: " . json_encode(array_diff_key($params, ['password' => ''])));
+                Log::debug("Waseet Request Payload [{$endpoint}]: " . json_encode($params));
                 $response = $request->post($url, $params);
             } else {
                 $response = $request->get($url, $params);
