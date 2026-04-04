@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\GatewayController;
 
 Route::prefix('gateway')->middleware(['check.api.key', 'throttle:waseet-gateway'])->group(function () {
+    Route::post('/connect-waseet', [GatewayController::class, 'connectWaseet']);
     Route::post('/create-order', [GatewayController::class, 'createOrder']);
     Route::post('/edit-order', [GatewayController::class, 'editOrder']);
     Route::get('/order-status/{id}', [GatewayController::class, 'getOrderStatus']);

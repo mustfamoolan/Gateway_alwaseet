@@ -23,6 +23,40 @@ class GatewayController extends Controller
     }
 
     /**
+     * POST /api/gateway/connect-waseet
+     * Allow client to update their Waseet credentials
+     */
+    public function connectWaseet(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $project = $this->getProject($request);
+
+        // Update temporarily to test login
+        $project->waseet_username = $request->username;
+        $project->waseet_password = $request->password;
+
+        $token = $this->waseetService->login($project);
+
+        if ($token) {
+            $project->save(); // Save permanently if login successful
+            return response()->json([
+                'status' => true,
+                'msg' => 'Successfully connected to Al-Waseet account',
+                'data' => ['merchant_username' => $project->waseet_username]
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'msg' => 'Failed to connect. Please check your Al-Waseet credentials.',
+        ], 422);
+    }
+
+    /**
      * POST /api/gateway/create-order
      */
     public function createOrder(Request $request)
