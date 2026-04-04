@@ -40,6 +40,7 @@ class WaseetService
             if ($response->successful() && ($data['status'] ?? false)) {
                 $token = $data['data']['token'] ?? null;
                 if ($token) {
+                    Log::info("Waseet Login Successful for project {$project->name}. Token starts with: " . substr($token, 0, 10));
                     $project->update([
                         'waseet_token' => $token,
                         'waseet_token_refresh_at' => now(),
@@ -48,7 +49,7 @@ class WaseetService
                 }
             }
 
-            Log::error("Waseet Login Response Failed for project {$project->name}: " . $response->body());
+            Log::error("Waseet Login Failed for project {$project->name}. Response: " . $response->body());
         } catch (\Exception $e) {
             Log::error("Waseet Login Exception for project {$project->name}: " . $e->getMessage());
         }
