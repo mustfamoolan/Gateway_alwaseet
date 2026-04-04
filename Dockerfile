@@ -31,6 +31,9 @@ COPY --chown=www-data:www-data . /var/www
 # Change current user to www
 USER www-data
 
+# Install Laravel dependencies
+RUN composer install --no-interaction --optimize-autoloader --no-dev
+
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
 CMD ["php-fpm"]
