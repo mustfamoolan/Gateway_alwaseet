@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\GatewayController;
 
+Route::post('/gateway/register', [GatewayController::class, 'registerProject']);
+
 Route::prefix('gateway')->middleware(['check.api.key', 'throttle:waseet-gateway'])->group(function () {
     Route::post('/connect-waseet', [GatewayController::class, 'connectWaseet']);
     Route::post('/create-order', [GatewayController::class, 'createOrder']);

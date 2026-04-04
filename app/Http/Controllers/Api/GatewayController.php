@@ -23,6 +23,47 @@ class GatewayController extends Controller
     }
 
     /**
+     * POST /api/gateway/register
+     * Register a new project and connect to Waseet automatically
+     */
+    public function registerProject(Request $request)
+    {
+        $request->validate([
+            'project_name' => 'required|string|unique:projects,name',
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        // Create Project
+        $project = new \App\Models\Project();
+        $project->name = $request->project_name;
+        $project->api_key = \Illuminate\Support\Str::random(32);
+        $project->waseet_username = $request->username;
+        $project->waseet_password = $request->password;
+        $project->is_active = true;
+
+        // Try connecting to Waseet
+        $token = $this->waseetService->login($project);
+
+        if ($token) {
+            $project->save();
+            return response()->json([
+                'status' => true,
+                'msg' => 'Project registered and connected successfully',
+                'data' => [
+                    'api_key' => $project->api_key,
+                    'merchant_username' => $project->waseet_username
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'msg' => 'Failed to connect. Please check your Al-Waseet credentials.',
+        ], 422);
+    }
+
+    /**
      * POST /api/gateway/connect-waseet
      * Allow client to update their Waseet credentials
      */
