@@ -99,9 +99,9 @@ class WaseetService
     }
 
     /**
-     * Helper for authenticated requests with logging.
+     * Helper for authenticated requests with logging and auto-retry on 401.
      */
-    protected function authenticatedRequest(Project $project, string $method, string $endpoint, array $params = [])
+    protected function authenticatedRequest(Project $project, string $method, string $endpoint, array $params = [], bool $isRetry = false)
     {
         $token = $this->getToken($project);
         if (!$token) {
@@ -109,7 +109,6 @@ class WaseetService
         }
 
         $url = "{$this->baseUrl}{$endpoint}?token={$token}";
-        
         $request = Http::asMultipart();
         
         try {
@@ -119,9 +118,23 @@ class WaseetService
                 $response = $request->get($url, $params);
             }
 
+            $data = $response->json();
+
+            // Handle "Unauthorized" or specific error code 21 from Al-Waseet
+            // msg: "ليس لديك صلاحية الوصول"
+            if (!$isRetry && ( ($data['errNum'] ?? 0) == 21 || ($data['status'] ?? true) === false && ($data['msg'] ?? '') == 'ليس لديك صلاحية الوصول') ) {
+                Log::warning("Waseet Token (ID: {$project->id}) might be invalid. Retrying with fresh login...");
+                
+                // Force a fresh login
+                $newToken = $this->login($project);
+                if ($newToken) {
+                    return $this->authenticatedRequest($project, $method, $endpoint, $params, true);
+                }
+            }
+
             $this->logRequest($project, $endpoint, $params, $response);
 
-            return $response->json();
+            return $data;
         } catch (\Exception $e) {
             Log::error("Waseet Request Exception for project {$project->name} [{$endpoint}]: " . $e->getMessage());
             return ['status' => false, 'msg' => 'Exception occurred during Waseet request: ' . $e->getMessage()];
