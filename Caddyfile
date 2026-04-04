@@ -1,0 +1,5 @@
+gateway.salesflowi.com {
+    root * /var/www/public
+    php_fastcgi app:9000
+    file_server
+}
