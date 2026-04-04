@@ -25,14 +25,14 @@ WORKDIR /var/www
 # Copy existing application directory contents
 COPY . /var/www
 
-# Copy existing application directory permissions
-COPY --chown=www-data:www-data . /var/www
+# Install Laravel dependencies as root to avoid folder permission issues
+RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# Set permissions for www-data
+RUN chown -R www-data:www-data /var/www
 
 # Change current user to www
 USER www-data
-
-# Install Laravel dependencies
-RUN composer install --no-interaction --optimize-autoloader --no-dev
 
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
