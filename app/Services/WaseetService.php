@@ -110,16 +110,18 @@ class WaseetService
             return ['status' => false, 'msg' => 'Authentication failed to Waseet API'];
         }
 
-        // v2.3 sometimes expects token in multiple places
+        // Official AlWaseet Documentation V2.3: token MUST be a Query Parameter
         $url = "{$this->baseUrl}{$endpoint}?token={$token}";
+        
+        // Minimize headers to avoid 400 errors from strict AlWaseet servers
         $request = Http::asMultipart()->withHeaders([
-            'Authorization' => "Bearer {$token}",
-            'token' => $token, // Custom header used by some Al-Waseet implementations
             'Accept' => 'application/json',
         ]);
         
         try {
             if ($method === 'POST') {
+                // Log payload for debugging (sanitized)
+                Log::debug("Waseet Request Payload [{$endpoint}]: " . json_encode(array_diff_key($params, ['password' => ''])));
                 $response = $request->post($url, $params);
             } else {
                 $response = $request->get($url, $params);
