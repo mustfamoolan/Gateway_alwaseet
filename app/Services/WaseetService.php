@@ -110,7 +110,10 @@ class WaseetService
         }
 
         $url = "{$this->baseUrl}{$endpoint}?token={$token}";
-        $request = Http::asMultipart();
+        $request = Http::asMultipart()->withHeaders([
+            'Authorization' => "Bearer {$token}",
+            'Accept' => 'application/json',
+        ]);
         
         try {
             if ($method === 'POST') {
