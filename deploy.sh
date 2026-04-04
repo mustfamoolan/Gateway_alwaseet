@@ -3,7 +3,7 @@
 echo "🚀 Starting Deployment for Al-Waseet Gateway..."
 
 # 1. Pull latest code if using git
-# git pull origin main
+git pull origin main
 
 # 2. Rebuild and restart containers
 docker-compose up -d --build
