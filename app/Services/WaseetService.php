@@ -30,17 +30,19 @@ class WaseetService
     public function login(Project $project): ?string
     {
         try {
-            $response = Http::asMultipart()->post("{$this->baseUrl}/v1/merchant/login", [
+            // Some API versions prefer standard Form-Params for login
+            $response = Http::asForm()->post("{$this->baseUrl}/v1/merchant/login", [
                 'username' => $project->waseet_username,
                 'password' => $project->waseet_password,
             ]);
 
             $data = $response->json();
 
-            if ($response->successful() && ($data['status'] ?? false)) {
+            // S000 is success in Al-Waseet
+            if ($response->successful() && (($data['status'] ?? false) === true || ($data['errNum'] ?? '') === 'S000')) {
                 $token = $data['data']['token'] ?? null;
                 if ($token) {
-                    Log::info("Waseet Login Successful for project {$project->name}. Token starts with: " . substr($token, 0, 10));
+                    Log::info("Waseet Login Successful for project {$project->name}.");
                     $project->update([
                         'waseet_token' => $token,
                         'waseet_token_refresh_at' => now(),
@@ -56,7 +58,6 @@ class WaseetService
 
         return null;
     }
-
     /**
      * Send order creation request.
      */
@@ -109,9 +110,11 @@ class WaseetService
             return ['status' => false, 'msg' => 'Authentication failed to Waseet API'];
         }
 
+        // v2.3 sometimes expects token in multiple places
         $url = "{$this->baseUrl}{$endpoint}?token={$token}";
         $request = Http::asMultipart()->withHeaders([
             'Authorization' => "Bearer {$token}",
+            'token' => $token, // Custom header used by some Al-Waseet implementations
             'Accept' => 'application/json',
         ]);
         
@@ -124,12 +127,10 @@ class WaseetService
 
             $data = $response->json();
 
-            // Handle "Unauthorized" or specific error code 21 from Al-Waseet
-            // msg: "ليس لديك صلاحية الوصول"
+            // Handle "Unauthorized" or specific error code 21
             if (!$isRetry && ( ($data['errNum'] ?? 0) == 21 || ($data['status'] ?? true) === false && ($data['msg'] ?? '') == 'ليس لديك صلاحية الوصول') ) {
-                Log::warning("Waseet Token (ID: {$project->id}) might be invalid. Retrying with fresh login...");
+                Log::warning("Waseet Token (ID: {$project->id}) invalid. Retrying with fresh login...");
                 
-                // Force a fresh login
                 $newToken = $this->login($project);
                 if ($newToken) {
                     return $this->authenticatedRequest($project, $method, $endpoint, $params, true);
