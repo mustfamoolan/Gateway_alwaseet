@@ -83,6 +83,14 @@ class WaseetService
     }
 
     /**
+     * Fetch all available statuses from Al-Waseet API.
+     */
+    public function fetchStatuses(Project $project)
+    {
+        return $this->authenticatedRequest($project, 'GET', '/v1/merchant/statuses');
+    }
+
+    /**
      * Fetch all auxiliary data (cities, regions, package sizes).
      */
     public function fetchSupplementaryData(string $type, array $params = [])

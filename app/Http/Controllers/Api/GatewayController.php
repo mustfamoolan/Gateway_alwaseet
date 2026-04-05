@@ -156,4 +156,15 @@ class GatewayController extends Controller
         $response = $this->waseetService->fetchSupplementaryData('package_sizes');
         return response()->json($response);
     }
+
+    /**
+     * GET /api/gateway/statuses
+     */
+    public function getStatuses(Request $request)
+    {
+        $project = $this->getProject($request);
+        $response = $this->waseetService->fetchStatuses($project);
+        
+        return response()->json($response);
+    }
 }

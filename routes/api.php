@@ -17,4 +17,5 @@ Route::prefix('gateway')->middleware(['check.api.key', 'throttle:waseet-gateway'
     Route::get('/cities', [GatewayController::class, 'getCities']);
     Route::get('/regions', [GatewayController::class, 'getRegions']);
     Route::get('/package-sizes', [GatewayController::class, 'getPackageSizes']);
+    Route::get('/statuses', [GatewayController::class, 'getStatuses']);
 });
