@@ -2,7 +2,7 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg python3 make g++
+RUN apk add --no-cache ffmpeg python3 make g++ git
 
 COPY package.json .
 RUN npm install
