@@ -19,3 +19,7 @@ Route::prefix('gateway')->middleware(['check.api.key', 'throttle:waseet-gateway'
     Route::get('/package-sizes', [GatewayController::class, 'getPackageSizes']);
     Route::get('/statuses', [GatewayController::class, 'getStatuses']);
 });
+
+// WhatsApp API Route
+use App\Http\Controllers\WhatsappController;
+Route::post('/v1/whatsapp/send', [WhatsappController::class, 'apiSendMessage']);

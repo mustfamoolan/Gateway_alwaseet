@@ -41,6 +41,12 @@
                             <span>Request Logs</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('whatsapp.index') }}" class="{{ request()->routeIs('whatsapp.*') ? 'active' : '' }}">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>WhatsApp API</span>
+                        </a>
+                    </li>
                     <li style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem;">
                         <a href="#">
                             <i class="fas fa-cog"></i>

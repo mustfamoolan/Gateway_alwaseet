@@ -44,6 +44,20 @@ services:
     networks:
       - waseet-net
 
+  # WhatsApp Engine Service
+  whatsapp-engine:
+    build:
+      context: ./whatsapp-engine
+      dockerfile: Dockerfile
+    image: waseet-whatsapp-engine
+    restart: unless-stopped
+    volumes:
+      - ./whatsapp-engine/auth:/app/auth
+    environment:
+      - WHATSAPP_PORT=3000
+    networks:
+      - waseet-net
+
 networks:
   waseet-net:
     driver: bridge
