@@ -51,8 +51,7 @@ class WhatsappController extends Controller
      */
     public function show(WaProject $project)
     {
-
-        $sessionStatus = $this->waService.getSessionStatus("project_{$project->id}");
+        $sessionStatus = $this->waService->getSessionStatus("project_{$project->id}");
         
         // Update local status if it changed in the engine
         if (isset($sessionStatus['status']) && $sessionStatus['status'] !== $project->status) {

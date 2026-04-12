@@ -1,92 +1,137 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="p-6 max-w-4xl mx-auto">
-    <div class="mb-6 flex items-center gap-4">
-        <a href="{{ route('whatsapp.index') }}" class="text-gray-500 hover:text-gray-700">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+<div class="p-6 md:p-12 bg-slate-50 min-h-screen">
+    <!-- Breadcrumbs & Header -->
+    <div class="max-w-6xl mx-auto mb-10">
+        <a href="{{ route('whatsapp.index') }}" class="inline-flex items-center text-slate-400 hover:text-indigo-600 font-bold transition-colors mb-4 group">
+            <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i>
+            Back to Overview
         </a>
-        <h1 class="text-2xl font-bold text-gray-800">{{ $project->name }}</h1>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Connection Status Card -->
-        <div class="bg-white rounded-xl shadow-sm border p-6">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full {{ $status === 'connected' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500' }}"></span>
-                Link Status: {{ ucfirst($status) }}
-            </h2>
-
-            @if($status === 'connected')
-                <div class="text-center py-8">
-                    <div class="bg-green-50 px-4 py-3 rounded-lg text-green-700 mb-4 inline-block">
-                        <svg class="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Successfully Connected!
-                    </div>
-                </div>
-            @elseif($qr)
-                <div class="text-center bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300">
-                    <p class="text-sm text-gray-600 mb-4">Scan the QR code with your WhatsApp app (Settings > Linked Devices)</p>
-                    <div class="bg-white p-4 inline-block rounded-lg shadow-sm border">
-                        <img src="{{ $qr }}" alt="WhatsApp QR Code" class="w-64 h-64">
-                    </div>
-                    <p class="mt-4 text-xs text-gray-500">Auto-refreshes every few seconds...</p>
-                    <script>
-                        // Simple polling to refresh the page when connected
-                        setInterval(() => {
-                            fetch(window.location.href)
-                                .then(res => res.text())
-                                .then(html => {
-                                    if(html.includes('Successfully Connected!')) {
-                                        window.location.reload();
-                                    }
-                                });
-                        }, 5000);
-                    </script>
-                </div>
-            @else
-                <div class="py-12 text-center text-gray-400">
-                    Initializing engine... please wait.
-                    <script>setTimeout(() => window.location.reload(), 3000);</script>
-                </div>
-            @endif
-        </div>
-
-        <!-- API Integration Card -->
-        <div class="bg-white rounded-xl shadow-sm border p-6">
-            <h2 class="text-lg font-semibold mb-4">API Integration</h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Your API Key</label>
-                    <div class="flex gap-2">
-                        <input type="text" readonly value="{{ $project->api_key }}" class="bg-gray-50 border-gray-300 rounded font-mono text-xs w-full p-2" id="apiKeyInput">
-                        <button onclick="copyToClipboard()" class="text-indigo-600 hover:text-indigo-800 text-xs font-medium">Copy</button>
-                    </div>
-                </div>
-
-                <div class="pt-4 border-t">
-                    <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Usage Example (cURL)</label>
-                    <pre class="bg-gray-900 text-gray-300 p-3 rounded text-[10px] overflow-x-auto">
-curl -X POST {{ url('/api/v1/whatsapp/send') }} \
-  -H "X-WA-API-KEY: {{ $project->api_key }}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "9665XXXXXXXX",
-    "message": "Hello from API!"
-  }'</pre>
+        <div class="flex items-center gap-6">
+            <div class="w-16 h-16 bg-white rounded-3xl shadow-sm flex items-center justify-center text-indigo-600 text-3xl border border-slate-100">
+                <i class="fab fa-whatsapp"></i>
+            </div>
+            <div>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tight">{{ $project->name }}</h1>
+                <div class="flex items-center gap-3 mt-1">
+                    <span class="text-slate-400 font-medium">Owner: {{ $project->owner_name }}</span>
+                    <span class="text-slate-200">|</span>
+                    <span class="inline-flex items-center gap-2 {{ $status === 'connected' ? 'text-emerald-500' : 'text-amber-500' }} font-bold text-sm uppercase tracking-widest">
+                        <span class="w-2 h-2 rounded-full {{ $status === 'connected' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] pulse-fast' : 'bg-amber-500' }}"></span>
+                        {{ $status }}
+                    </span>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        <!-- Connection Card (Left) -->
+        <div class="lg:col-span-5">
+            <div class="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100 h-full flex flex-col items-center justify-center text-center">
+                
+                @if($status === 'connected')
+                    <div class="relative">
+                        <div class="w-48 h-48 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 text-7xl animate-in zoom-in duration-500">
+                            <i class="fas fa-check-double"></i>
+                        </div>
+                        <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-white px-6 py-2 rounded-full shadow-lg border border-emerald-100 whitespace-nowrap">
+                            <span class="text-emerald-600 font-black tracking-tight tracking-wide uppercase text-xs">Device Ready</span>
+                        </div>
+                    </div>
+                    <h3 class="mt-12 text-2xl font-black text-slate-800">Connection Active</h3>
+                    <p class="text-slate-400 mt-2 font-medium max-w-[250px]">Your account is linked and ready to process messages.</p>
+                @elseif($qr)
+                    <div class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 relative group transition-all">
+                        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+                            <img src="{{ $qr }}" alt="QR" class="w-56 h-56 group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-black text-slate-800 mb-2">Scan with WhatsApp</h3>
+                        <p class="text-slate-400 text-sm font-medium leading-relaxed">Go to Settings > Linked Devices<br>on your phone to scan this code.</p>
+                    </div>
+                    
+                    <script>
+                        setInterval(() => {
+                            fetch(window.location.href)
+                                .then(res => res.text())
+                                .then(html => {
+                                    if(html.includes('Connection Active')) { window.location.reload(); }
+                                });
+                        }, 4000);
+                    </script>
+                @else
+                    <div class="flex flex-col items-center">
+                        <div class="w-20 h-20 border-4 border-slate-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <p class="mt-6 font-bold text-slate-400 animate-pulse">Initializing Engine...</p>
+                    </div>
+                    <script>setTimeout(() => window.location.reload(), 3000);</script>
+                @endif
+            </div>
+        </div>
+
+        <!-- API Details (Right) -->
+        <div class="lg:col-span-7 space-y-8">
+            <!-- API Key Card -->
+            <div class="bg-slate-900 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-900/20 relative overflow-hidden">
+                <i class="fas fa-key absolute -right-4 -bottom-4 text-white/5 text-8xl transform -rotate-12"></i>
+                
+                <h3 class="text-xl font-bold mb-8 flex items-center gap-2">
+                    <span class="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-xs">
+                        <i class="fas fa-code"></i>
+                    </span>
+                    API Authentication Key
+                </h3>
+
+                <div class="bg-white/5 border border-white/10 p-5 rounded-2xl flex items-center justify-between group">
+                    <code class="font-mono text-indigo-300 text-sm md:text-base tracking-tighter" id="apiKeyText">{{ $project->api_key }}</code>
+                    <button onclick="copyKey()" class="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95">
+                        <i class="fas fa-copy mr-2"></i> Copy Key
+                    </button>
+                </div>
+                <p class="mt-6 text-slate-400 text-sm font-medium italic">Keep this key secret and secure.</p>
+            </div>
+
+            <!-- cURL Bento Box -->
+            <div class="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                    <i class="fas fa-terminal text-indigo-600"></i>
+                    Documentation Snippet
+                </h3>
+                
+                <div class="relative group">
+                    <pre class="bg-slate-50 border border-slate-100 p-6 rounded-2xl text-[11px] md:text-[13px] text-slate-600 font-mono leading-relaxed overflow-x-auto">
+curl -X POST {{ url('/api/v1/whatsapp/send') }} \
+-H "X-WA-API-KEY: YOUR_KEY" \
+-H "Content-Type: application/json" \
+-d '{
+  "to": "9665XXXXXXXX",
+  "message": "Hello from API!"
+}'</pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
+<style>
+    @keyframes pulse-fast {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+    }
+    .pulse-fast { animation: pulse-fast 1.5s infinite; }
+</style>
+
 <script>
-function copyToClipboard() {
-    const input = document.getElementById('apiKeyInput');
-    input.select();
-    document.execCommand('copy');
-    alert('API Key copied to clipboard!');
+function copyKey() {
+    const text = document.getElementById('apiKeyText').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('API Key Copied to Dashboard!');
+    });
 }
 </script>
 @endsection
