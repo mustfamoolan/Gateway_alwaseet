@@ -22,7 +22,7 @@ class WhatsappController extends Controller
      */
     public function index()
     {
-        $projects = WaProject::where('user_id', Auth::id())->latest()->get();
+        $projects = WaProject::latest()->get();
         return view('whatsapp.index', compact('projects'));
     }
 
@@ -37,7 +37,7 @@ class WhatsappController extends Controller
         ]);
 
         $project = WaProject::create([
-            'user_id' => Auth::id(),
+            'user_id' => null,
             'name' => $request->name,
             'owner_name' => $request->owner_name,
             'status' => 'pending',
@@ -51,7 +51,6 @@ class WhatsappController extends Controller
      */
     public function show(WaProject $project)
     {
-        if ($project->user_id !== Auth::id()) abort(403);
 
         $sessionStatus = $this->waService.getSessionStatus("project_{$project->id}");
         
@@ -105,7 +104,6 @@ class WhatsappController extends Controller
      */
     public function destroy(WaProject $project)
     {
-        if ($project->user_id !== Auth::id()) abort(403);
 
         $this->waService.deleteSession("project_{$project->id}");
         $project->delete();

@@ -19,11 +19,9 @@ Route::post('projects/{project}/toggle', [ProjectController::class, 'toggle'])->
 
 // WhatsApp Service Routes
 use App\Http\Controllers\WhatsappController;
-Route::middleware(['auth'])->group(function () {
-    Route::get('/whatsapp', [WhatsappController::class, 'index'])->name('whatsapp.index');
-    Route::post('/whatsapp', [WhatsappController::class, 'store'])->name('whatsapp.store');
-    Route::get('/whatsapp/{project}', [WhatsappController::class, 'show'])->name('whatsapp.show');
-    Route::delete('/whatsapp/{project}', [WhatsappController::class, 'destroy'])->name('whatsapp.destroy');
-});
+Route::get('/whatsapp', [WhatsappController::class, 'index'])->name('whatsapp.index');
+Route::post('/whatsapp', [WhatsappController::class, 'store'])->name('whatsapp.store');
+Route::get('/whatsapp/{project}', [WhatsappController::class, 'show'])->name('whatsapp.show');
+Route::delete('/whatsapp/{project}', [WhatsappController::class, 'destroy'])->name('whatsapp.destroy');
 
 Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
