@@ -1,123 +1,94 @@
 @extends('layouts.admin')
 
 @section('content')
-<div class="p-4 md:p-10 bg-slate-50 min-h-screen">
-    <!-- Header Section -->
-    <div class="max-w-7xl mx-auto mb-10">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-            <div>
-                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">WhatsApp API Service</h1>
-                <p class="text-slate-500 mt-2 font-medium">Manage your automated messaging channels</p>
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem; align-items: start;">
+        
+        <!-- WhatsApp Projects Table -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; mb-1.5rem; margin-bottom: 20px;">
+                <h2 style="font-size: 1.25rem; font-weight: 700;">WhatsApp API Channels</h2>
+                <p style="color: var(--text-gray); font-size: 0.875rem;">Manage your messaging connections</p>
             </div>
-            <button onclick="document.getElementById('createModal').classList.remove('hidden')" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-2xl shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2 font-bold">
-                <i class="fas fa-plus"></i>
-                Create New Project
-            </button>
-        </div>
-    </div>
 
-    <!-- Stats/Bento Grid -->
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        @foreach($projects as $project)
-        <div class="group bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition-all duration-300 relative overflow-hidden">
-            <!-- Decorative Gradient -->
-            <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50 group-hover:bg-indigo-100 transition-colors"></div>
-            
-            <div class="relative z-10">
-                <div class="flex justify-between items-start mb-6">
-                    <div class="p-4 bg-indigo-50 text-indigo-600 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                        <i class="fab fa-whatsapp text-2xl"></i>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full {{ $project->status === 'connected' ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' }}"></div>
-                        <span class="text-xs font-bold uppercase tracking-wider {{ $project->status === 'connected' ? 'text-emerald-600' : 'text-amber-600' }}">
-                            {{ $project->status }}
-                        </span>
-                    </div>
+            <div class="card" style="padding: 0;">
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($projects as $project)
+                                <tr>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 32px; height: 32px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                                <i class="fab fa-whatsapp"></i>
+                                            </div>
+                                            <span style="font-weight: 700; color: #fff;">{{ $project->name }}</span>
+                                        </div>
+                                    </td>
+                                    <td style="color: var(--text-gray);">{{ $project->owner_name }}</td>
+                                    <td>
+                                        <span class="badge {{ $project->status === 'connected' ? 'badge-success' : 'badge-danger' }}" style="background: {{ $project->status === 'connected' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)' }}; color: {{ $project->status === 'connected' ? '#10b981' : '#f59e0b' }};">
+                                            {{ strtoupper($project->status) }}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                            <a href="{{ route('whatsapp.show', $project->id) }}" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border);">
+                                                <i class="fas fa-plug" style="margin-right: 0.3rem;"></i> Manage
+                                            </a>
+                                            <form action="{{ route('whatsapp.destroy', $project->id) }}" method="POST" onsubmit="return confirm('Delete this project?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-gray); padding: 3rem;">No WhatsApp channels created yet.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+        </div>
 
-                <h2 class="text-xl font-bold text-slate-800 mb-1">{{ $project->name }}</h2>
-                <div class="flex items-center gap-2 text-slate-400 text-sm mb-8">
-                    <i class="fas fa-user-circle"></i>
-                    <span>{{ $project->owner_name }}</span>
+        <!-- Add New Connection Form -->
+        <div class="card">
+            <h3 style="font-size: 1.1rem; margin-bottom: 1.5rem; font-weight: 700; color: #fff;">New WhatsApp Connection</h3>
+            
+            <form action="{{ route('whatsapp.store') }}" method="POST">
+                @csrf
+                <div class="form-group">
+                    <label>Channel Name</label>
+                    <input type="text" name="name" class="form-control" placeholder="e.g. Sales Alerts" required>
                 </div>
                 
-                <div class="flex items-center gap-3">
-                    <a href="{{ route('whatsapp.show', $project->id) }}" 
-                       class="flex-1 bg-slate-900 hover:bg-black text-white text-center py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-                        Manage <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                    
-                    <form action="{{ route('whatsapp.destroy', $project->id) }}" method="POST" onsubmit="return confirm('Delete this project?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="p-4 text-slate-300 hover:bg-rose-50 hover:text-rose-500 rounded-xl transition-all">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </form>
+                <div class="form-group">
+                    <label>Responsible Person</label>
+                    <input type="text" name="owner_name" class="form-control" placeholder="e.g. Ahmad" required>
                 </div>
-            </div>
+
+                <div style="background: rgba(79, 70, 229, 0.05); border: 1px dashed rgba(79, 70, 229, 0.2); border-radius: 12px; padding: 1rem; margin: 1.5rem 0;">
+                    <p style="font-size: 0.75rem; color: var(--primary-glow); font-weight: 600; line-height: 1.4;">
+                        <i class="fas fa-info-circle"></i> Once created, you will need to scan the QR code to link your account.
+                    </p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Initialize Channel</button>
+            </form>
         </div>
-        @endforeach
 
-        <!-- Empty State in Grid -->
-        @if($projects->isEmpty())
-        <div class="lg:col-span-3 py-24 flex flex-col items-center justify-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
-            <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 text-4xl mb-6">
-                <i class="fab fa-whatsapp"></i>
-            </div>
-            <h3 class="text-xl font-bold text-slate-800">No Projects Found</h3>
-            <p class="text-slate-400 mt-2">Start by creating your first WhatsApp automation project.</p>
-        </div>
-        @endif
     </div>
-</div>
-
-<!-- Premium Create Modal -->
-<div id="createModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg p-10 relative animate-in fade-in zoom-in duration-300">
-        <button onclick="document.getElementById('createModal').classList.add('hidden')" 
-                class="absolute top-6 right-8 text-slate-300 hover:text-slate-500 transition-colors">
-            <i class="fas fa-times text-xl"></i>
-        </button>
-
-        <h3 class="text-2xl font-black text-slate-900 mb-2">Build New Connection</h3>
-        <p class="text-slate-500 mb-8 font-medium">Configure your messaging project details below.</p>
-
-        <form action="{{ route('whatsapp.store') }}" method="POST">
-            @csrf
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2 px-1">Project Identifier</label>
-                    <div class="relative">
-                        <i class="fas fa-tag absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" name="name" required 
-                               class="w-full bg-slate-50 border-0 rounded-2xl px-12 py-4 text-slate-900 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                               placeholder="e.g. Sales Notification">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2 px-1">Lead Developer/Owner</label>
-                    <div class="relative">
-                        <i class="fas fa-user-tie absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" name="owner_name" required 
-                               class="w-full bg-slate-50 border-0 rounded-2xl px-12 py-4 text-slate-900 focus:ring-2 focus:ring-indigo-500 transition-all font-medium" 
-                               placeholder="Name of person responsible">
-                    </div>
-                </div>
-            </div>
-            <div class="mt-10 flex gap-4">
-                <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-bold shadow-lg shadow-indigo-100 transition-all active:scale-95">
-                    Launch Project
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<style>
-    .sidebar { border-right: 1px solid #f1f5f9 !important; }
-    .layout { background: #f8fafc !important; }
-</style>
 @endsection
