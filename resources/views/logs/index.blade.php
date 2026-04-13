@@ -3,7 +3,17 @@
 @section('content')
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <h2 style="font-size: 1.5rem; font-weight: 800;">Request History</h2>
-        <div style="color: var(--text-gray); font-size: 0.875rem;">Showing last 25 requests</div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            @if(request('secret'))
+                <form action="{{ route('logs.clear', ['secret' => request('secret')]) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete ALL logs?')">
+                    @csrf
+                    <button type="submit" class="btn" style="background: #EF4444; color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-trash-alt"></i> Clear All Logs
+                    </button>
+                </form>
+            @endif
+            <div style="color: var(--text-gray); font-size: 0.875rem;">Showing last 25 requests</div>
+        </div>
     </div>
 
     <div class="card" style="padding: 0;">

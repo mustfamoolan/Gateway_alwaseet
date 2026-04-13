@@ -27,3 +27,4 @@ Route::post('/whatsapp/{project}/test-send', [WhatsappController::class, 'testSe
 Route::delete('/whatsapp/{project}', [WhatsappController::class, 'destroy'])->name('whatsapp.destroy');
 
 Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+Route::post('/logs/clear', [LogController::class, 'clear'])->name('logs.clear');

@@ -172,12 +172,38 @@ class WaseetService
     {
         try {
             $data = $response->json();
+            $isSuccess = $response->successful() && ($data['status'] ?? false);
+            
+            // Check if we should skip logging this successful request
+            if ($isSuccess && !config('services.waseet.log_successful_requests', env('WASEET_LOG_SUCCESSFUL_REQUESTS', false))) {
+                // Skip read-only/frequent endpoints if successful
+                $skipEndpoints = [
+                    '/v1/merchant/get-orders-by-ids-bulk',
+                    '/v1/merchant/statuses',
+                    '/v1/merchant/citys',
+                    '/v1/merchant/regions',
+                    '/v1/merchant/package-sizes'
+                ];
+                
+                if (in_array($endpoint, $skipEndpoints)) {
+                    return;
+                }
+            }
+
+            // Sanitize Payloads (Remove Tokens)
+            if (isset($request['token'])) {
+                 $request['token'] = '********';
+            }
+            if (isset($data['data']['token'])) {
+                 $data['data']['token'] = '********';
+            }
+
             RequestLog::create([
                 'project_id' => $project->id,
                 'endpoint' => $endpoint,
                 'request_payload' => $request,
                 'response_payload' => $data,
-                'status' => $response->successful() && ($data['status'] ?? false) ? 'success' : 'failed',
+                'status' => $isSuccess ? 'success' : 'failed',
                 'http_status_code' => $response->status(),
                 'ip_address' => request()->ip(),
             ]);
