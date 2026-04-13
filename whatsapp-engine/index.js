@@ -1,3 +1,12 @@
+// Ensure global crypto is available (required by Baileys on some Node versions)
+if (!global.crypto) {
+    try {
+        global.crypto = require('node:crypto').webcrypto;
+    } catch (e) {
+        console.error('Failed to polyfill global.crypto:', e);
+    }
+}
+
 const { 
     default: makeWASocket, 
     useMultiFileAuthState, 
