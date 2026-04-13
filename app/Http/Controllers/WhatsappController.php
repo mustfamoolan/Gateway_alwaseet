@@ -94,6 +94,7 @@ class WhatsappController extends Controller
             'wa_project_id' => $project->id,
             'to_number' => $request->to,
             'message_body' => $request->message,
+            'direction' => 'outbound',
             'status' => isset($result['success']) ? 'sent' : 'failed',
             'error_message' => $result['error'] ?? null,
             'response_metadata' => $result
@@ -107,10 +108,74 @@ class WhatsappController extends Controller
      */
     public function destroy(WaProject $project)
     {
-
         $this->waService->deleteSession("project_{$project->id}");
         $project->delete();
 
         return redirect()->route('whatsapp.index')->with('success', 'Project deleted');
+    }
+
+    /**
+     * Webhook for incoming messages from the engine.
+     */
+    public function webhook(Request $request)
+    {
+        $sessionId = $request->sessionId; // e.g., project_1
+        $projectId = str_replace('project_', '', $sessionId);
+        
+        $project = WaProject::find($projectId);
+        if (!$project) return response()->json(['error' => 'Project not found'], 404);
+
+        WaMessage::create([
+            'wa_project_id' => $project->id,
+            'from_number' => $request->from,
+            'to_number' => 'me', // The project number
+            'message_body' => $request->text,
+            'direction' => 'inbound',
+            'status' => 'read',
+            'response_metadata' => $request->metadata
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Fetch last messages for the chat UI.
+     */
+    public function getMessages(WaProject $project)
+    {
+        $messages = WaMessage::where('wa_project_id', $project->id)
+            ->latest()
+            ->limit(30)
+            ->get()
+            ->reverse()
+            ->values();
+
+        return response()->json($messages);
+    }
+
+    /**
+     * Handle test send from the UI.
+     */
+    public function testSend(Request $request, WaProject $project)
+    {
+        $request->validate([
+            'to' => 'required|string',
+            'message' => 'required|string',
+        ]);
+
+        $result = $this->waService->sendMessage("project_{$project->id}", $request->to, $request->message);
+
+        // Log the message
+        WaMessage::create([
+            'wa_project_id' => $project->id,
+            'to_number' => $request->to,
+            'message_body' => $request->message,
+            'direction' => 'outbound',
+            'status' => isset($result['success']) ? 'sent' : 'failed',
+            'error_message' => $result['error'] ?? null,
+            'response_metadata' => $result
+        ]);
+
+        return response()->json($result);
     }
 }

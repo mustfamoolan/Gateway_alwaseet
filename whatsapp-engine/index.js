@@ -96,6 +96,38 @@ async function startSession(sessionId) {
         }
     });
 
+    // Listen for incoming messages
+    sock.ev.on('messages.upsert', async (upsert) => {
+        if (upsert.type === 'notify') {
+            for (const msg of upsert.messages) {
+                if (!msg.key.fromMe && msg.message) {
+                    const from = msg.key.remoteJid;
+                    const text = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
+                    
+                    console.log(`[${sessionId}] Received message from ${from}: ${text}`);
+
+                    // Send to Laravel Webhook
+                    const webhookUrl = process.env.WEBHOOK_URL || 'http://app:/api/v1/whatsapp/webhook';
+                    try {
+                        await fetch(webhookUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                sessionId,
+                                from,
+                                text,
+                                timestamp: msg.messageTimestamp,
+                                metadata: msg
+                            })
+                        });
+                    } catch (err) {
+                        console.error(`[${sessionId}] Webhook failed:`, err.message);
+                    }
+                }
+            }
+        }
+    });
+
     return sessionObj;
 }
 

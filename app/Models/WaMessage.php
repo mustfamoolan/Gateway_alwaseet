@@ -9,8 +9,10 @@ class WaMessage extends Model
 {
     protected $fillable = [
         'wa_project_id',
+        'from_number',
         'to_number',
         'message_body',
+        'direction',
         'status',
         'error_message',
         'response_metadata'

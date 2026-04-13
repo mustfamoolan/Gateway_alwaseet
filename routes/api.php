@@ -20,6 +20,7 @@ Route::prefix('gateway')->middleware(['check.api.key', 'throttle:waseet-gateway'
     Route::get('/statuses', [GatewayController::class, 'getStatuses']);
 });
 
-// WhatsApp API Route
+// WhatsApp API Routes
 use App\Http\Controllers\WhatsappController;
 Route::post('/v1/whatsapp/send', [WhatsappController::class, 'apiSendMessage']);
+Route::post('/v1/whatsapp/webhook', [WhatsappController::class, 'webhook']);

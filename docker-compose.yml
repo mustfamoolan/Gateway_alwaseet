@@ -56,6 +56,7 @@ services:
       - ./whatsapp-engine/auth:/app/auth
     environment:
       - WHATSAPP_PORT=3000
+      - WEBHOOK_URL=http://app:80/api/v1/whatsapp/webhook
     networks:
       - waseet-net
 

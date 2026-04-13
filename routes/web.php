@@ -22,6 +22,8 @@ use App\Http\Controllers\WhatsappController;
 Route::get('/whatsapp', [WhatsappController::class, 'index'])->name('whatsapp.index');
 Route::post('/whatsapp', [WhatsappController::class, 'store'])->name('whatsapp.store');
 Route::get('/whatsapp/{project}', [WhatsappController::class, 'show'])->name('whatsapp.show');
+Route::get('/whatsapp/{project}/messages', [WhatsappController::class, 'getMessages'])->name('whatsapp.messages');
+Route::post('/whatsapp/{project}/test-send', [WhatsappController::class, 'testSend'])->name('whatsapp.test-send');
 Route::delete('/whatsapp/{project}', [WhatsappController::class, 'destroy'])->name('whatsapp.destroy');
 
 Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
