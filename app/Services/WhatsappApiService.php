@@ -20,11 +20,12 @@ class WhatsappApiService
     public function getSessionStatus(string $sessionId)
     {
         try {
-            $response = Http::timeout(10)->get("{$this->baseUrl}/session/{$sessionId}");
+            $url = "{$this->baseUrl}/session/{$sessionId}";
+            $response = Http::timeout(10)->get($url);
             return $response->json();
         } catch (\Exception $e) {
-            Log::error("WhatsApp Engine Error (getSessionStatus): " . $e->getMessage());
-            return ['status' => 'error', 'message' => 'Engine unavailable'];
+            Log::error("WhatsApp Engine Error (getSessionStatus) on URL [{$url}]: " . $e->getMessage());
+            return ['status' => 'error', 'message' => "Engine unreachable at {$this->baseUrl}"];
         }
     }
 
@@ -34,7 +35,8 @@ class WhatsappApiService
     public function sendMessage(string $sessionId, string $to, string $text)
     {
         try {
-            $response = Http::timeout(15)->post("{$this->baseUrl}/message/send", [
+            $url = "{$this->baseUrl}/message/send";
+            $response = Http::timeout(15)->post($url, [
                 'sessionId' => $sessionId,
                 'to' => $to,
                 'text' => $text
@@ -42,8 +44,8 @@ class WhatsappApiService
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error("WhatsApp Engine Error (sendMessage): " . $e->getMessage());
-            return ['error' => 'Engine unavailable'];
+            Log::error("WhatsApp Engine Error (sendMessage) on URL [{$url}]: " . $e->getMessage());
+            return ['error' => "Engine unreachable at {$this->baseUrl}"];
         }
     }
 
@@ -53,11 +55,12 @@ class WhatsappApiService
     public function deleteSession(string $sessionId)
     {
         try {
-            $response = Http::timeout(10)->delete("{$this->baseUrl}/session/{$sessionId}");
+            $url = "{$this->baseUrl}/session/{$sessionId}";
+            $response = Http::timeout(10)->delete($url);
             return $response->json();
         } catch (\Exception $e) {
-            Log::error("WhatsApp Engine Error (deleteSession): " . $e->getMessage());
-            return ['error' => 'Engine unavailable'];
+            Log::error("WhatsApp Engine Error (deleteSession) on URL [{$url}]: " . $e->getMessage());
+            return ['error' => "Engine unreachable at {$this->baseUrl}"];
         }
     }
 }

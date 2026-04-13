@@ -22,11 +22,22 @@ const sessions = new Map();
 // --- WhatsApp Engine Logic ---
 
 async function startSession(sessionId) {
-    if (sessions.has(sessionId)) return sessions.get(sessionId);
+    console.log(`[${sessionId}] Starting session initialization...`);
+    if (sessions.has(sessionId)) {
+        console.log(`[${sessionId}] Session already exists in memory.`);
+        return sessions.get(sessionId);
+    }
 
     const sessionPath = path.join(__dirname, 'auth', sessionId);
+    console.log(`[${sessionId}] Loading auth state from: ${sessionPath}`);
     const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-    const { version } = await fetchLatestBaileysVersion();
+    
+    console.log(`[${sessionId}] Fetching latest Baileys version...`);
+    const { version } = await fetchLatestBaileysVersion().catch(err => {
+        console.error(`[${sessionId}] Error fetching Baileys version:`, err.message);
+        return { version: [2, 3000, 1015901307] }; // Fallback version
+    });
+    console.log(`[${sessionId}] Using Baileys version: ${version.join('.')}`);
 
     const sock = makeWASocket({
         version,
@@ -51,24 +62,26 @@ async function startSession(sessionId) {
         const { connection, lastDisconnect, qr } = update;
 
         if (qr) {
+            console.log(`[${sessionId}] New QR code generated.`);
             sessionObj.qr = await qrcode.toDataURL(qr);
             sessionObj.status = 'pending';
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Connection closed due to ', lastDisconnect.error, ', reconnecting ', shouldReconnect);
+            const statusCode = lastDisconnect.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            console.log(`[${sessionId}] Connection closed. Reason:`, lastDisconnect.error?.message, '| Reconnecting:', shouldReconnect);
             
             if (shouldReconnect) {
                 sessions.delete(sessionId);
                 startSession(sessionId);
             } else {
+                console.log(`[${sessionId}] Logged out. Cleaning up...`);
                 sessions.delete(sessionId);
-                // Clean up files
                 fs.rmSync(sessionPath, { recursive: true, force: true });
             }
         } else if (connection === 'open') {
-            console.log('Opened connection');
+            console.log(`[${sessionId}] Connection opened successfully!`);
             sessionObj.status = 'connected';
             sessionObj.qr = null;
         }

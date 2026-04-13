@@ -47,12 +47,22 @@
                             });
                     }, 4000);
                 </script>
+            @elseif($error)
+                <div style="padding: 3rem 0; color: #ef4444;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; margin-bottom: 1.5rem;"></i>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Connection Error</h3>
+                    <p style="font-size: 0.875rem; color: var(--text-gray);">{{ $error }}</p>
+                    <div style="margin-top: 1.5rem;">
+                        <a href="{{ route('whatsapp.show', $project->id) }}" class="btn btn-primary" style="font-size: 0.75rem;">Retry Connection</a>
+                    </div>
+                </div>
             @else
                 <div style="padding: 4rem 0;">
                     <i class="fas fa-circle-notch fa-spin" style="font-size: 2.5rem; color: var(--primary-glow); margin-bottom: 1.5rem;"></i>
                     <p style="color: var(--text-gray); font-weight: 600;">Initializing Engine...</p>
+                    <p style="font-size: 0.75rem; color: var(--text-gray); margin-top: 0.5rem;">If this takes more than 30 seconds, please check the logs.</p>
                 </div>
-                <script>setTimeout(() => window.location.reload(), 3000);</script>
+                <script>setTimeout(() => window.location.reload(), 5000);</script>
             @endif
         </div>
 

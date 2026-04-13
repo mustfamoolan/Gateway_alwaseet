@@ -58,10 +58,14 @@ class WhatsappController extends Controller
             $project->update(['status' => $sessionStatus['status']]);
         }
 
+        // Diagnostic: If engine returns error, let the view know why
+        $error = $sessionStatus['status'] === 'error' ? ($sessionStatus['message'] ?? 'Unknown Error') : null;
+
         return view('whatsapp.show', [
             'project' => $project,
             'qr' => $sessionStatus['qr'] ?? null,
-            'status' => $sessionStatus['status'] ?? 'disconnected'
+            'status' => $sessionStatus['status'] ?? 'disconnected',
+            'error' => $error
         ]);
     }
 
@@ -83,7 +87,7 @@ class WhatsappController extends Controller
             'message' => 'required|string',
         ]);
 
-        $result = $this->waService.sendMessage("project_{$project->id}", $request->to, $request->message);
+        $result = $this->waService->sendMessage("project_{$project->id}", $request->to, $request->message);
 
         // Log the message
         WaMessage::create([
@@ -104,7 +108,7 @@ class WhatsappController extends Controller
     public function destroy(WaProject $project)
     {
 
-        $this->waService.deleteSession("project_{$project->id}");
+        $this->waService->deleteSession("project_{$project->id}");
         $project->delete();
 
         return redirect()->route('whatsapp.index')->with('success', 'Project deleted');
