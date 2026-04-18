@@ -44,19 +44,27 @@ class SyncWaseetStatus extends Command
 
             // Al-Waseet supports bulk by comma-separated IDs
             $ids = $orders->pluck('waseet_order_id')->join(',');
+            $this->comment("Requesting IDs: $ids");
             
             try {
                 $response = $this->waseetService->getOrderStatus($project, $ids);
+                
+                if ($this->getOutput()->isVerbose()) {
+                    $this->line("Raw Response: " . json_encode($response));
+                }
                 
                 \Illuminate\Support\Facades\Log::debug("Waseet Bulk Response for {$project->name}: " . json_encode($response));
 
                 // Response should be an array of orders in 'data'
                 $waseetOrders = $response['data'] ?? [];
                 
-                // If not an array but a single object, wrap it
-                if (!is_array($waseetOrders) || (isset($waseetOrders['qr_id']) || isset($waseetOrders['order_id']))) {
+                // If not an array but a single object (has qr_id/order_id directly), wrap it
+                if (is_array($waseetOrders) && (isset($waseetOrders['qr_id']) || isset($waseetOrders['order_id']))) {
                     $waseetOrders = [$waseetOrders];
                 }
+                
+                $dataCount = is_array($waseetOrders) ? count($waseetOrders) : 0;
+                $this->line("Received data for $dataCount order(s).");
 
                 foreach ($waseetOrders as $waseetData) {
                     $waseetId = $waseetData['qr_id'] ?? $waseetData['order_id'] ?? null;
