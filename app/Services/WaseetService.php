@@ -63,7 +63,20 @@ class WaseetService
      */
     public function createOrder(Project $project, array $params)
     {
-        return $this->authenticatedRequest($project, 'POST', '/v1/merchant/create-order', $params);
+        $response = $this->authenticatedRequest($project, 'POST', '/v1/merchant/create-order', $params);
+        
+        // Track the order if successful
+        if (($response['status'] ?? false) === true) {
+            $orderId = $response['data']['qr_id'] ?? $response['data']['order_id'] ?? null;
+            if ($orderId) {
+                \App\Models\WaseetOrder::updateOrCreate(
+                    ['waseet_order_id' => $orderId, 'project_id' => $project->id],
+                    ['last_status' => 'قيد المعالجة', 'is_terminal' => false]
+                );
+            }
+        }
+
+        return $response;
     }
 
     /**
