@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 
 use Illuminate\Support\Facades\Schedule;
 Schedule::command('logs:prune')->daily();
+Schedule::command('waseet:sync-status')->everyMinute();
