@@ -92,7 +92,30 @@ class WaseetService
      */
     public function getOrderStatus(Project $project, string $orderId)
     {
-        return $this->authenticatedRequest($project, 'GET', "/v1/merchant/get-orders-by-ids-bulk", ['ids' => $orderId]);
+        $response = $this->authenticatedRequest($project, 'GET', "/v1/merchant/get-orders-by-ids-bulk", ['ids' => $orderId]);
+        
+        // Auto-Discovery: If Al-Waseet returns status for an untracked order, start tracking it
+        if (($response['status'] ?? false) === true) {
+            $waseetOrders = $response['data'] ?? [];
+            if (!is_array($waseetOrders) || (isset($waseetOrders['qr_id']) || isset($waseetOrders['order_id']))) {
+                $waseetOrders = [$waseetOrders];
+            }
+
+            foreach ($waseetOrders as $waseetData) {
+                $qrId = $waseetData['qr_id'] ?? $waseetData['order_id'] ?? null;
+                if ($qrId) {
+                    \App\Models\WaseetOrder::updateOrCreate(
+                        ['waseet_order_id' => $qrId, 'project_id' => $project->id],
+                        [
+                            'last_status' => $waseetData['status_name'] ?? $waseetData['status'] ?? 'قيد المعالجة',
+                            'is_terminal' => false // Will be updated by sync command if terminal
+                        ]
+                    );
+                }
+            }
+        }
+
+        return $response;
     }
 
     /**

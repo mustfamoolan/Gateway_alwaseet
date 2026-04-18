@@ -22,6 +22,7 @@ class SyncWaseetStatus extends Command
     public function handle()
     {
         $this->info("Starting Waseet Status Sync (Bulk Mode)...");
+        \Illuminate\Support\Facades\Log::info("Waseet Sync Started.");
 
         $terminalStatuses = ['واصل', 'راجع', 'مباع', 'تم استلام الراجع', 'تم تسليم المبالغ', 'ملغي', 'إيداع راجع'];
 
@@ -29,6 +30,11 @@ class SyncWaseetStatus extends Command
             ->with('project')
             ->get()
             ->groupBy('project_id');
+
+        if ($activeOrdersByProject->isEmpty()) {
+            $this->warn("No active orders found to sync.");
+            return;
+        }
 
         foreach ($activeOrdersByProject as $projectId => $orders) {
             $project = $orders->first()->project;
@@ -42,6 +48,8 @@ class SyncWaseetStatus extends Command
             try {
                 $response = $this->waseetService->getOrderStatus($project, $ids);
                 
+                \Illuminate\Support\Facades\Log::debug("Waseet Bulk Response for {$project->name}: " . json_encode($response));
+
                 // Response should be an array of orders in 'data'
                 $waseetOrders = $response['data'] ?? [];
                 
@@ -73,10 +81,13 @@ class SyncWaseetStatus extends Command
                         if ($project->callback_url) {
                             $this->notifyProject($project, $order, $oldStatus, $newStatus, $waseetData);
                         }
+                    } else {
+                        $this->line("Order {$waseetId} status unchanged: {$order->last_status}");
                     }
                 }
             } catch (\Exception $e) {
                 $this->error("Bulk sync failed for project {$project->name}: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Bulk sync failed: " . $e->getMessage());
             }
         }
 
@@ -86,24 +97,30 @@ class SyncWaseetStatus extends Command
     protected function notifyProject($project, $order, $oldStatus, $newStatus, $waseetData)
     {
         try {
+            $payload = [
+                'order_id' => $order->waseet_order_id,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'full_data' => $waseetData,
+                'timestamp' => now()->toIso8601String(),
+            ];
+
             $response = \Illuminate\Support\Facades\Http::timeout(10)
                 ->withHeaders([
-                    'X-API-KEY' => $project->api_key, // Security
+                    'X-API-KEY' => $project->api_key,
                     'Accept' => 'application/json',
                 ])
-                ->post($project->callback_url, [
-                    'order_id' => $order->waseet_order_id,
-                    'old_status' => $oldStatus,
-                    'new_status' => $newStatus,
-                    'full_data' => $waseetData,
-                    'timestamp' => now()->toIso8601String(),
-                ]);
+                ->post($project->callback_url, $payload);
 
             if (!$response->successful()) {
-                \Illuminate\Support\Facades\Log::error("Webhook failed for order {$order->waseet_order_id} to {$project->callback_url}. Status: " . $response->status());
+                $this->error("Webhook failed for order {$order->waseet_order_id} to {$project->callback_url}. Status: " . $response->status());
+                \Illuminate\Support\Facades\Log::error("Webhook failed: " . $response->body());
+            } else {
+                $this->info("Webhook sent successfully for order {$order->waseet_order_id}");
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Webhook exception for order {$order->waseet_order_id}: " . $e->getMessage());
+            $this->error("Webhook exception for order {$order->waseet_order_id}: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Webhook exception: " . $e->getMessage());
         }
     }
 }
