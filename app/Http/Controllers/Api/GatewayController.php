@@ -167,4 +167,33 @@ class GatewayController extends Controller
         
         return response()->json($response);
     }
+
+    /**
+     * POST /api/gateway/track-bulk
+     * Start tracking multiple orders at once
+     */
+    public function trackBulk(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|string',
+        ]);
+
+        $project = $this->getProject($request);
+        $ids = $request->ids;
+        $count = 0;
+
+        foreach ($ids as $id) {
+            \App\Models\WaseetOrder::updateOrCreate(
+                ['waseet_order_id' => (string) $id, 'project_id' => $project->id],
+                ['last_status' => 'قيد المعالجة', 'is_terminal' => false]
+            );
+            $count++;
+        }
+
+        return response()->json([
+            'status' => true,
+            'msg' => "Successfully added $count orders to tracking",
+        ]);
+    }
 }

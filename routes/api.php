@@ -12,6 +12,7 @@ Route::prefix('gateway')->middleware(['check.api.key', 'throttle:waseet-gateway'
     Route::post('/create-order', [GatewayController::class, 'createOrder']);
     Route::post('/edit-order', [GatewayController::class, 'editOrder']);
     Route::get('/order-status/{id}', [GatewayController::class, 'getOrderStatus']);
+    Route::post('/track-bulk', [GatewayController::class, 'trackBulk']);
     
     // Supplementary data (Cached can be added later)
     Route::get('/cities', [GatewayController::class, 'getCities']);
