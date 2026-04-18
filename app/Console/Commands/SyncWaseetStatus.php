@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class SyncWaseetStatus extends Command
 {
-    protected $signature = 'waseet:sync-status';
+    protected $signature = 'waseet:sync-status {--force : Force send webhooks even if status unchanged}';
     protected $description = 'Sync active order statuses from Al-Waseet and notify client projects';
 
     protected \App\Services\WaseetService $waseetService;
@@ -78,9 +78,10 @@ class SyncWaseetStatus extends Command
                     }
 
                     $newStatus = $waseetData['status_name'] ?? $waseetData['status'] ?? null;
+                    $force = $this->option('force');
                     
-                    if ($newStatus && $newStatus !== $order->last_status) {
-                        $this->info("Order {$waseetId} changed: {$order->last_status} -> {$newStatus}");
+                    if ($newStatus && ($newStatus !== $order->last_status || $force)) {
+                        $this->info("Order {$waseetId} " . ($force ? "[FORCED]" : "changed") . ": {$order->last_status} -> {$newStatus}");
                         
                         $oldStatus = $order->last_status;
                         $isTerminal = in_array($newStatus, $terminalStatuses);
