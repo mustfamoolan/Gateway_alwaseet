@@ -67,11 +67,15 @@ class SyncWaseetStatus extends Command
                 $this->line("Received data for $dataCount order(s).");
 
                 foreach ($waseetOrders as $waseetData) {
-                    $waseetId = $waseetData['qr_id'] ?? $waseetData['order_id'] ?? null;
+                    $waseetId = $waseetData['id'] ?? $waseetData['qr_id'] ?? $waseetData['order_id'] ?? null;
                     if (!$waseetId) continue;
 
-                    $order = $orders->firstWhere('waseet_order_id', $waseetId);
-                    if (!$order) continue;
+                    // Support string/int comparison safely
+                    $order = $orders->first(fn($o) => (string)$o->waseet_order_id === (string)$waseetId);
+                    if (!$order) {
+                        $this->line("Data received for ID {$waseetId} but not found in tracking.");
+                        continue;
+                    }
 
                     $newStatus = $waseetData['status_name'] ?? $waseetData['status'] ?? null;
                     
