@@ -88,6 +88,15 @@ class WaseetService
     }
 
     /**
+     * Send order cancellation/delete request.
+     * Note: This endpoint is unlisted in docs, attempting standard pattern.
+     */
+    public function cancelOrder(Project $project, string $orderId)
+    {
+        return $this->authenticatedRequest($project, 'POST', '/v1/merchant/delete-order', ['qr_id' => $orderId]);
+    }
+
+    /**
      * Get order status.
      */
     public function getOrderStatus(Project $project, string $orderId)

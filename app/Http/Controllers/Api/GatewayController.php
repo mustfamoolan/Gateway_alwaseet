@@ -120,6 +120,18 @@ class GatewayController extends Controller
     }
 
     /**
+     * POST /api/gateway/delete-order
+     */
+    public function deleteOrder(Request $request)
+    {
+        $request->validate(['id' => 'required|string']);
+        $project = $this->getProject($request);
+        $response = $this->waseetService->cancelOrder($project, $request->id);
+        
+        return response()->json($response);
+    }
+
+    /**
      * GET /api/gateway/order-status/{id}
      */
     public function getOrderStatus(Request $request, $id)
