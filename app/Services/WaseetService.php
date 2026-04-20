@@ -191,6 +191,10 @@ class WaseetService
 
             $data = $response->json();
 
+            if (!$response->successful()) {
+                Log::error("Waseet API Error Response [{$endpoint}]: Status Code {$response->status()}, Body: " . $response->body());
+            }
+
             // Handle "Unauthorized" or specific error code 21
             if (!$isRetry && ( ($data['errNum'] ?? 0) == 21 || ($data['status'] ?? true) === false && ($data['msg'] ?? '') == 'ليس لديك صلاحية الوصول') ) {
                 Log::warning("Waseet Token (ID: {$project->id}) invalid. Retrying with fresh login...");
@@ -205,7 +209,10 @@ class WaseetService
 
             return $data;
         } catch (\Exception $e) {
-            Log::error("Waseet Request Exception for project {$project->name} [{$endpoint}]: " . $e->getMessage());
+            Log::error("Waseet Request Exception for project {$project->name} [{$endpoint}]: " . $e->getMessage(), [
+                'params' => $params,
+                'trace' => $e->getTraceAsString()
+            ]);
             return ['status' => false, 'msg' => 'Exception occurred during Waseet request: ' . $e->getMessage()];
         }
     }
